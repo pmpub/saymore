@@ -15,6 +15,8 @@ struct OnboardingModelScreen: View {
     let onVerificationChanged: () -> Void
     let onBack: () -> Void
     let onContinue: () -> Void
+    var isAppleSpeechAvailable: Bool = false
+    var onSkip: () -> Void = {}
 
     var body: some View {
         OnboardingStepScreen(
@@ -31,7 +33,9 @@ struct OnboardingModelScreen: View {
                 localDownloadStatus: localDownloadStatus,
                 onSelectSetupKind: onSelectSetupKind,
                 onDownloadLocalModel: onDownload,
-                onVerificationChanged: onVerificationChanged
+                onVerificationChanged: onVerificationChanged,
+                isAppleSpeechAvailable: isAppleSpeechAvailable,
+                onSkip: onSkip
             )
         } bottomBar: {
             OnboardingBottomBar(

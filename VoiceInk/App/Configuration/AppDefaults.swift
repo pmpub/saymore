@@ -47,7 +47,7 @@ enum AppDefaults {
             // Recording & Transcription
             "IsTextFormattingEnabled": true,
             "IsVADEnabled": true,
-            "SelectedLanguage": "en",
+            "SelectedLanguage": "zh",
             "AppendTrailingSpace": true,
             "StripTrailingPeriod": true,
             "RecorderType": "mini",

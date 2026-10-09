@@ -12,6 +12,8 @@ struct OnboardingTranscriptionSetupCard: View {
     let onSelectSetupKind: (OnboardingTranscriptionSetupKind) -> Void
     let onDownloadLocalModel: (FluidAudioModel) -> Void
     let onVerificationChanged: () -> Void
+    var isAppleSpeechAvailable: Bool = false
+    var onSkip: () -> Void = {}
 
     @EnvironmentObject private var transcriptionModelManager: TranscriptionModelManager
     @State private var apiKey = ""
@@ -107,19 +109,55 @@ struct OnboardingTranscriptionSetupCard: View {
 
     @ViewBuilder
     private var localSetup: some View {
-        if let localModel {
-            TranscriptionModelDownloadCard(
-                model: localModel,
-                isDownloaded: isLocalDownloaded,
-                isDownloading: isLocalDownloading,
-                status: localDownloadStatus,
-                onDownload: {
-                    onDownloadLocalModel(localModel)
+        VStack(alignment: .leading, spacing: 10) {
+            if isAppleSpeechAvailable {
+                appleSpeechPanel
+            }
+            if let localModel {
+                TranscriptionModelDownloadCard(
+                    model: localModel,
+                    isDownloaded: isLocalDownloaded,
+                    isDownloading: isLocalDownloading,
+                    status: localDownloadStatus,
+                    onDownload: {
+                        onDownloadLocalModel(localModel)
+                    }
+                )
+            } else {
+                missingModelPanel
+            }
+            if !isLocalDownloaded && !isAppleSpeechAvailable {
+                Button(action: onSkip) {
+                    Text("跳过下载，稍后在 设置 → AI 模型 里选择识别模型（推荐 SenseVoice Small，支持中文）")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(AppTheme.Text.secondary)
+                        .underline()
                 }
-            )
-        } else {
-            missingModelPanel
+                .buttonStyle(.plain)
+                .padding(.leading, 4)
+            }
         }
+    }
+
+    private var appleSpeechPanel: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "checkmark.circle.fill")
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundColor(AppTheme.Status.positive)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Apple Speech 已内置，支持中文，无需下载，可直接继续。")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundColor(AppTheme.Text.primary)
+                Text("下面的 Parakeet 只支持英文和欧洲语言，可以不下。")
+                    .font(.system(size: 11))
+                    .foregroundColor(AppTheme.Text.secondary)
+            }
+
+            Spacer(minLength: 0)
+        }
+        .padding(16)
+        .background(AppMaterialCardBackground(cornerRadius: 12))
     }
 
     private var missingModelPanel: some View {

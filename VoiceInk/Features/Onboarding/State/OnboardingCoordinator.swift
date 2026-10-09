@@ -53,6 +53,26 @@ final class OnboardingCoordinator: ObservableObject {
         }
     }
 
+    @Published var hasSkippedTranscriptionSetup: Bool {
+        didSet {
+            defaults.set(hasSkippedTranscriptionSetup, forKey: OnboardingStorageKeys.skippedTranscriptionSetup)
+        }
+    }
+
+    /// Apple Speech ships with macOS 26+, so local transcription needs no download there.
+    var isAppleSpeechAvailable: Bool {
+        if #available(macOS 26, *) { return true } else { return false }
+    }
+
+    /// Model the starter modes get when onboarding finishes in local mode.
+    var localOnboardingTranscriptionModelName: String {
+        isAppleSpeechAvailable ? "apple-speech" : StarterModeFactory.defaultTranscriptionModelName
+    }
+
+    var localOnboardingTranscriptionLanguage: String {
+        isAppleSpeechAvailable ? "zh-CN" : "auto"
+    }
+
     @Published var permissionStatuses: [OnboardingPermissionKind: OnboardingPermissionStatus] = [:]
     @Published var isSelectedTranscriptionProviderVerified = false
     @Published var isSelectedAPIProviderVerified = false
@@ -87,6 +107,7 @@ final class OnboardingCoordinator: ObservableObject {
                 forKey: OnboardingStorageKeys.transcriptionProvider
             ) ?? ""
         self.hasSkippedAPISetup = defaults.bool(forKey: OnboardingStorageKeys.skippedAPISetup)
+        self.hasSkippedTranscriptionSetup = defaults.bool(forKey: OnboardingStorageKeys.skippedTranscriptionSetup)
     }
 
     deinit {
@@ -308,7 +329,7 @@ final class OnboardingCoordinator: ObservableObject {
     }
 
     var selectedOnboardingTranscriptionLanguage: String {
-        guard let model = selectedOnboardingTranscriptionModel else { return "auto" }
+        guard let model = selectedOnboardingTranscriptionModel else { return localOnboardingTranscriptionLanguage }
         return TranscriptionLanguageSupport.validLanguageOrFallback("auto", for: model)
     }
 
@@ -407,7 +428,7 @@ final class OnboardingCoordinator: ObservableObject {
     func isTranscriptionSetupReady(isTranscriptionModelDownloaded: Bool) -> Bool {
         switch transcriptionSetupKind {
         case .local:
-            return isTranscriptionModelDownloaded
+            return isTranscriptionModelDownloaded || isAppleSpeechAvailable || hasSkippedTranscriptionSetup
         case .cloud:
             guard selectedOnboardingTranscriptionModel != nil else { return false }
             return isSelectedTranscriptionProviderVerified
@@ -435,6 +456,7 @@ enum OnboardingStorageKeys {
     static let transcriptionSetupKind = "onboardingTranscriptionSetupKind"
     static let transcriptionProvider = "onboardingTranscriptionProvider"
     static let skippedAPISetup = "onboardingSkippedAPISetup"
+    static let skippedTranscriptionSetup = "onboardingSkippedTranscriptionSetup"
 
     static let onboardingKeys = [
         stage,
@@ -444,6 +466,7 @@ enum OnboardingStorageKeys {
         transcriptionSetupKind,
         transcriptionProvider,
         skippedAPISetup,
+        skippedTranscriptionSetup,
         experienceIndex,
         "onboardingStarterModeIndex",
     ]

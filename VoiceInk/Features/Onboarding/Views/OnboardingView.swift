@@ -78,7 +78,9 @@ struct OnboardingView: View {
                                 isTranscriptionSetupReady: isTranscriptionSetupReady,
                                 aiService: aiService
                             )
-                        }
+                        },
+                        isAppleSpeechAvailable: coordinator.isAppleSpeechAvailable,
+                        onSkip: { coordinator.hasSkippedTranscriptionSetup = true }
                     )
                     .transition(.opacity)
                 case .api:

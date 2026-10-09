@@ -356,6 +356,13 @@ final class OnboardingFlowController {
             return
         }
 
+        if coordinator.transcriptionSetupKind == .local,
+            coordinator.defaults.string(forKey: "CurrentTranscriptionModel") == nil,
+            coordinator.isAppleSpeechAvailable
+        {
+            coordinator.defaults.set("apple-speech", forKey: "CurrentTranscriptionModel")
+            coordinator.defaults.set("zh-CN", forKey: "SelectedLanguage")
+        }
         OnboardingStorageKeys.onboardingKeys.forEach {
             coordinator.defaults.removeObject(forKey: $0)
         }
@@ -478,7 +485,7 @@ final class OnboardingFlowController {
             provider: coordinator.selectedOnboardingProvider,
             modelName: coordinator.selectedOnboardingProvider.defaultModel,
             transcriptionModelName: coordinator.selectedOnboardingTranscriptionModelName
-                ?? StarterModeFactory.defaultTranscriptionModelName,
+                ?? coordinator.localOnboardingTranscriptionModelName,
             isRealtimeTranscriptionEnabled: coordinator.selectedOnboardingTranscriptionUsesRealtime,
             selectedLanguage: coordinator.selectedOnboardingTranscriptionLanguage
         )
